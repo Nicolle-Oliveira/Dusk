@@ -4,19 +4,19 @@
 TagManager:
   serializedVersion: 2
   tags:
+  - Teste
   - Enemy
-  - Area
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - area
+  - 
   - Water
   - UI
   - Player
   - Background
-  - obstacle
   - 
+  - ttt
   - 
   - 
   - 

@@ -4,20 +4,16 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    //Variável para acessar o componente de Rigidbody deste objeto
-    
+    //Variáveis para acessar os componentes
     private Rigidbody2D rigi;
     private CircleCollider2D colide;
     private Animator anim;
-    public bool isUnderAttack = false;
+    [SerializeField] AudioSource passos;
+    [SerializeField] AudioSource damage;
 
-
-    //Variável para acessar o componente de Audio
-    //private AudioSource som;
-
-    //Velocidade dos jogadores e direção do movimento
     private float speed = 10f;
-    private float defaultSpeed = 10f;
+    private bool hurt;
+    private bool shield;
 
     //Getters and Setters
     public float Speed{
@@ -25,6 +21,15 @@ public class PlayerController : MonoBehaviour
         set{ speed = value; }
     }
 
+    public bool Hurt{
+        get{ return hurt; }
+        set{ hurt = value; }
+    }
+
+    public bool Shield{
+        get{ return shield; }
+        set{ shield = value; }
+    }
 
     // Start is called before the first frame update
     public void Start(){
@@ -32,8 +37,31 @@ public class PlayerController : MonoBehaviour
         rigi = GetComponent<Rigidbody2D>();
         colide = GetComponent<CircleCollider2D>();
         anim = GetComponent<Animator>();
-        //som = GetComponent<AudioSource>();
+    }
 
+    public void Update(){
+
+        if(Input.GetKey("a")){
+            Shield = true;
+        }else{
+            Shield = false;
+        }
+        
+        anim.SetBool("GameOver", GameManager.gameManager.GameOver);
+        anim.SetBool("Hurt", Hurt);
+        anim.SetBool("Shield", Shield);
+
+        bool estaAndando = VerificarSeEstaAndando();
+
+        // Se o personagem estiver andando e o som não estiver tocando, inicie a reprodução
+        if (estaAndando && !passos.isPlaying){
+            passos.Play();
+        }
+        // Se o personagem não estiver andando e o som estiver tocando, pare a reprodução
+        //else if (!passos && passos.isPlaying){
+         //   passos.Stop();
+       // }
+       
     }
 
     /*Função chamada com um tempo definido (0.02) 
@@ -41,80 +69,33 @@ public class PlayerController : MonoBehaviour
     */
     public void FixedUpdate(){
 
-            
-            Vector3 movimento = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0f);
-            transform.position = transform.position + movimento * Speed * Time.deltaTime;
+        Vector3 movimento = new Vector3(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), 0f);
+        transform.position = transform.position + movimento * Speed * Time.deltaTime;
 
-            anim.SetFloat("Horizontal", movimento.x);
-            anim.SetFloat("Vertical", movimento.y);
-            anim.SetFloat("Speed", movimento.magnitude);
-
-            if (Input.GetKeyDown(KeyCode.K)){
-                if (isUnderAttack == true)
-                {
-                    
-                    Invoke("Attack", 3.0f);
-                    Debug.Log("Atacado");
-                }
-                else{
-                  Debug.Log("Fora da zona");
-                }    
-            }
-            else if(isUnderAttack == true){
-                Debug.Log("Dano Recebido");
-            }
-            
-            
-            
-                                           
-        
-        
-      
-
-        //rigi.velocity = new Vector2(Input.GetAxisRaw("Horizontal") * Speed, Input.GetAxisRaw("Vertical") * Speed);
+        //Enviando posição para definir animação
+        anim.SetFloat("Horizontal", movimento.x);
+        anim.SetFloat("Vertical", movimento.y);
+        anim.SetFloat("Speed", movimento.magnitude);
     }
 
-    // Update is called once per frame
-    public void Update()
+    private void OnCollisionEnter2D(Collision2D collision)
     {
-        /*Obtendo entradas dos jogadores 1 e/ou 2
-        * N esquecer - Edit -> Project Settings -> Input Manager
-        * GetAxisRaw() usado no lugar de GetAxis() para um movimento menos fluido
-        */
-       // if(this.gameObject.tag == "Play1"){
-      //      Direction = ;
-      //  }else{
-           // Direction = Input.GetAxisRaw("Controle2");
-      //  }
-
-     
-        
+        // Verifique se a colisão envolve um objeto específico (opcional)
+        if (collision.gameObject.CompareTag("Teste"))
+        {
+            Hurt = true;
+            damage.Play();
+            Invoke("doisMilAnosDepois", 2f);   
+        }
     }
 
-    public void Attack(){
-
-        speed = 0;
-        
+    //Funcao criada apenas para usar o invoke
+    public void doisMilAnosDepois(){
+        Hurt = false;
     }
 
-    public void OnTriggerEnter2D(Collider2D collision2D){
-        
-        //Sempre que a bola colidir com esse objeto, reproduz som
-
-        
-        //if(collision2D.gameObject.tag == "Bola"){
-         //   som.Play();
-       // }
-       if (collision2D.gameObject.tag == "ZonadeAtaque")
-       {
-        //Debug.Log("Mata o Bixos");
-            isUnderAttack = true;
-       }
-
-       
-       
-      
+    private bool VerificarSeEstaAndando()
+    {
+        return Input.GetKey("up") || Input.GetKey("down") || Input.GetKey("left") || Input.GetKey("right");
     }
-
-
 }
